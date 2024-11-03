@@ -25,6 +25,10 @@ class ApplicationTest {
     private static final String REQUEST_HANDLER_ERROR_MESSAGE = "Something went wrong in request handler";
     private static final RuntimeException REQUEST_HANDLER_EXCEPTION =
             new RuntimeException(REQUEST_HANDLER_ERROR_MESSAGE);
+    private static final String FAILURE_HANDLER_ERROR_MESSAGE = "Something went wrong in failure handler";
+    private static final RuntimeException FAILURE_HANDLER_EXCEPTION =
+            new RuntimeException(FAILURE_HANDLER_ERROR_MESSAGE);
+    private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 
     private Router router;
 
@@ -179,7 +183,7 @@ class ApplicationTest {
         var response = performGetRequest("/");
 
         assertThat(response.statusCode()).isEqualTo(500);
-        assertThat(response.body()).isEqualTo("Internal Server Error");
+        assertThat(response.body()).isEqualTo(INTERNAL_SERVER_ERROR);
         vertxTestContext.succeedingThenComplete();
     }
 
@@ -204,6 +208,64 @@ class ApplicationTest {
                             .setStatusCode(rc.statusCode())
                             .end(rc.failure().getMessage());
                 });
+
+        var response = performGetRequest("/");
+
+        assertThat(response.statusCode()).isEqualTo(500);
+        assertThat(response.body()).isEqualTo(REQUEST_HANDLER_ERROR_MESSAGE);
+        vertxTestContext.succeedingThenComplete();
+    }
+
+    @Test
+    void exceptionInFailureHandlerIsNotHandledByNextFailureHandler(VertxTestContext vertxTestContext) {
+        var handlerExecuted = vertxTestContext.checkpoint();
+        var firstFailureHandlerExecuted = vertxTestContext.checkpoint();
+
+        router.route("/")
+                .handler(rc -> {
+                    handlerExecuted.flag();
+                    throw REQUEST_HANDLER_EXCEPTION;
+                })
+                .failureHandler(rc -> {
+                    firstFailureHandlerExecuted.flag();
+                    throw FAILURE_HANDLER_EXCEPTION;
+                })
+                .failureHandler(rc -> {
+                    vertxTestContext.failNow("Error should not reach second failure handler");
+                    rc.response()
+                            .setStatusCode(rc.statusCode())
+                            .end(rc.failure().getMessage());
+                });
+
+        var response = performGetRequest("/");
+
+        assertThat(response.statusCode()).isEqualTo(500);
+        assertThat(response.body()).isEqualTo(INTERNAL_SERVER_ERROR);
+        vertxTestContext.succeedingThenComplete();
+    }
+
+    @Test
+    void exceptionInFailureHandlerIsIgnoredByErrorHandler(VertxTestContext vertxTestContext) {
+        var handlerExecuted = vertxTestContext.checkpoint();
+        var firstFailureHandlerExecuted = vertxTestContext.checkpoint();
+        var errorHandlerExecuted = vertxTestContext.checkpoint();
+
+        router.route("/")
+                .handler(rc -> {
+                    handlerExecuted.flag();
+                    throw REQUEST_HANDLER_EXCEPTION;
+                })
+                .failureHandler(rc -> {
+                    firstFailureHandlerExecuted.flag();
+                    throw FAILURE_HANDLER_EXCEPTION;
+                });
+
+        router.errorHandler(500, rc -> {
+            errorHandlerExecuted.flag();
+            rc.response()
+                    .setStatusCode(500)
+                    .end(rc.failure().getMessage());
+        });
 
         var response = performGetRequest("/");
 
