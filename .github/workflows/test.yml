@@ -19,3 +19,8 @@ jobs:
           cache: maven
       - name: Run tests
         run: mvn test
+      - name: Publish results
+        uses: ljpengelen/junit-xml-action@main
+        if: always()
+        with:
+          files: "**/target/surefire-reports/TEST-*.xml"
