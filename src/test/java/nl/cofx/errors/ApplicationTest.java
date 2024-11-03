@@ -147,6 +147,61 @@ class ApplicationTest {
     }
 
     @Test
+    void failureHandlerCanDeferToFailureHandlerOfOtherMatchingRoute(VertxTestContext vertxTestContext) {
+        var handlerExecuted = vertxTestContext.checkpoint();
+        var firstFailureHandlerExecuted = vertxTestContext.checkpoint();
+        var secondFailureHandlerExecuted = vertxTestContext.checkpoint();
+
+        router.route("/")
+                .handler(rc -> {
+                    handlerExecuted.flag();
+                    throw REQUEST_HANDLER_EXCEPTION;
+                })
+                .failureHandler(rc -> {
+                    firstFailureHandlerExecuted.flag();
+                    rc.next();
+                });
+        router.route()
+                .failureHandler(rc -> {
+                    secondFailureHandlerExecuted.flag();
+                    rc.response()
+                            .setStatusCode(rc.statusCode())
+                            .end(rc.failure().getMessage());
+                });
+
+        var response = performGetRequest("/");
+
+        assertThat(response.statusCode()).isEqualTo(500);
+        assertThat(response.body()).isEqualTo(REQUEST_HANDLER_ERROR_MESSAGE);
+        vertxTestContext.succeedingThenComplete();
+    }
+
+    @Test
+    void failureCanBeHandledByFailureHandlerOfOtherMatchingRoute(VertxTestContext vertxTestContext) {
+        var handlerExecuted = vertxTestContext.checkpoint();
+        var failureHandlerExecuted = vertxTestContext.checkpoint();
+
+        router.route("/")
+                .handler(rc -> {
+                    handlerExecuted.flag();
+                    throw REQUEST_HANDLER_EXCEPTION;
+                });
+        router.route()
+                .failureHandler(rc -> {
+                    failureHandlerExecuted.flag();
+                    rc.response()
+                            .setStatusCode(rc.statusCode())
+                            .end(rc.failure().getMessage());
+                });
+
+        var response = performGetRequest("/");
+
+        assertThat(response.statusCode()).isEqualTo(500);
+        assertThat(response.body()).isEqualTo(REQUEST_HANDLER_ERROR_MESSAGE);
+        vertxTestContext.succeedingThenComplete();
+    }
+
+    @Test
     void errorHandlerCanHandleException(VertxTestContext vertxTestContext) {
         var handlerExecuted = vertxTestContext.checkpoint();
         var errorHandlerExecuted = vertxTestContext.checkpoint();
