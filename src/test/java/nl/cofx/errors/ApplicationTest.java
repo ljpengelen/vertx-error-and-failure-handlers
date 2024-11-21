@@ -334,13 +334,13 @@ class ApplicationTest {
                     rootFailureHandlerExecuted.flag();
                     rc.response()
                             .setStatusCode(500)
-                            .end(REQUEST_HANDLER_ERROR_MESSAGE);
+                            .end(FAILURE_HANDLER_ERROR_MESSAGE);
                 });
 
         var response = performGetRequest("/sub/route");
 
         assertThat(response.statusCode()).isEqualTo(500);
-        assertThat(response.body()).isEqualTo(REQUEST_HANDLER_ERROR_MESSAGE);
+        assertThat(response.body()).isEqualTo(FAILURE_HANDLER_ERROR_MESSAGE);
         vertxTestContext.succeedingThenComplete();
     }
 
