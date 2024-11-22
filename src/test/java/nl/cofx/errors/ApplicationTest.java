@@ -310,7 +310,7 @@ class ApplicationTest {
     }
 
     @Test
-    void failureHandlerForSubRouterCanFallBackToErrorHandlerForRoot(Vertx vertx, VertxTestContext vertxTestContext) {
+    void failureHandlerForSubRouterCanFallBackToFailureHandlerForRoot(Vertx vertx, VertxTestContext vertxTestContext) {
         var handlerExecuted = vertxTestContext.checkpoint();
         var rootFailureHandlerExecuted = vertxTestContext.checkpoint();
         var subFailureHandlerExecuted = vertxTestContext.checkpoint();
