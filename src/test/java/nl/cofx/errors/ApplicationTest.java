@@ -247,7 +247,7 @@ class ApplicationTest {
     @Test
     void exceptionInFailureHandlerIsIgnoredByErrorHandler(VertxTestContext vertxTestContext) {
         var handlerExecuted = vertxTestContext.checkpoint();
-        var firstFailureHandlerExecuted = vertxTestContext.checkpoint();
+        var failureHandlerExecuted = vertxTestContext.checkpoint();
         var errorHandlerExecuted = vertxTestContext.checkpoint();
 
         router.route("/")
@@ -256,7 +256,7 @@ class ApplicationTest {
                     throw REQUEST_HANDLER_EXCEPTION;
                 })
                 .failureHandler(rc -> {
-                    firstFailureHandlerExecuted.flag();
+                    failureHandlerExecuted.flag();
                     throw FAILURE_HANDLER_EXCEPTION;
                 });
 
