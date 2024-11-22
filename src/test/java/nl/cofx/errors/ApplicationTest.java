@@ -23,12 +23,10 @@ class ApplicationTest {
 
     private static final int PORT = 8080;
     private static final String REQUEST_HANDLER_ERROR_MESSAGE = "Something went wrong in request handler";
-    private static final RuntimeException REQUEST_HANDLER_EXCEPTION =
-            new RuntimeException(REQUEST_HANDLER_ERROR_MESSAGE);
     private static final String FAILURE_HANDLER_ERROR_MESSAGE = "Something went wrong in failure handler";
-    private static final RuntimeException FAILURE_HANDLER_EXCEPTION =
-            new RuntimeException(FAILURE_HANDLER_ERROR_MESSAGE);
     private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
+    private static final String MESSAGE_FROM_ERROR_HANDLER = "Message from error handler";
+    private static final String MESSAGE_FROM_FAILURE_HANDLER = "Message from failure handler";
 
     private Router router;
 
@@ -57,19 +55,20 @@ class ApplicationTest {
         router.route("/")
                 .handler(rc -> {
                     handlerExecuted.flag();
-                    throw REQUEST_HANDLER_EXCEPTION;
+                    throw new RuntimeException(REQUEST_HANDLER_ERROR_MESSAGE);
                 })
                 .failureHandler(rc -> {
                     failureHandlerExecuted.flag();
                     rc.response()
                             .setStatusCode(rc.statusCode())
-                            .end(rc.failure().getMessage());
+                            .end(MESSAGE_FROM_FAILURE_HANDLER + ": " + rc.failure().getMessage());
                 });
 
         var response = performGetRequest("/");
 
         assertThat(response.statusCode()).isEqualTo(500);
-        assertThat(response.body()).isEqualTo(REQUEST_HANDLER_ERROR_MESSAGE);
+        assertThat(response.body()).startsWith(MESSAGE_FROM_FAILURE_HANDLER);
+        assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
         vertxTestContext.succeedingThenComplete();
     }
 
@@ -105,19 +104,20 @@ class ApplicationTest {
         router.route("/")
                 .handler(rc -> {
                     handlerExecuted.flag();
-                    rc.fail(418, REQUEST_HANDLER_EXCEPTION);
+                    rc.fail(418, new RuntimeException(REQUEST_HANDLER_ERROR_MESSAGE));
                 })
                 .failureHandler(rc -> {
                     failureHandlerExecuted.flag();
                     rc.response()
                             .setStatusCode(rc.statusCode())
-                            .end(rc.failure().getMessage());
+                            .end(MESSAGE_FROM_FAILURE_HANDLER + ": " + rc.failure().getMessage());
                 });
 
         var response = performGetRequest("/");
 
         assertThat(response.statusCode()).isEqualTo(418);
-        assertThat(response.body()).isEqualTo(REQUEST_HANDLER_ERROR_MESSAGE);
+        assertThat(response.body()).startsWith(MESSAGE_FROM_FAILURE_HANDLER);
+        assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
         vertxTestContext.succeedingThenComplete();
     }
 
@@ -129,20 +129,21 @@ class ApplicationTest {
         router.route("/")
                 .handler(rc -> {
                     handlerExecuted.flag();
-                    throw REQUEST_HANDLER_EXCEPTION;
+                    throw new RuntimeException(REQUEST_HANDLER_ERROR_MESSAGE);
                 })
                 .failureHandler(rc -> {
                     failureHandlerExecuted.flag();
                     rc.response()
                             .setStatusCode(rc.statusCode())
-                            .end(rc.failure().getMessage());
+                            .end(MESSAGE_FROM_FAILURE_HANDLER + ": " + rc.failure().getMessage());
                 });
         router.errorHandler(500, rc -> vertxTestContext.failNow("Error should not reach error handler"));
 
         var response = performGetRequest("/");
 
         assertThat(response.statusCode()).isEqualTo(500);
-        assertThat(response.body()).isEqualTo(REQUEST_HANDLER_ERROR_MESSAGE);
+        assertThat(response.body()).startsWith(MESSAGE_FROM_FAILURE_HANDLER);
+        assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
         vertxTestContext.succeedingThenComplete();
     }
 
@@ -154,19 +155,20 @@ class ApplicationTest {
         router.route("/")
                 .handler(rc -> {
                     handlerExecuted.flag();
-                    throw REQUEST_HANDLER_EXCEPTION;
+                    throw new RuntimeException(REQUEST_HANDLER_ERROR_MESSAGE);
                 });
         router.errorHandler(500, rc -> {
             errorHandlerExecuted.flag();
             rc.response()
                     .setStatusCode(500)
-                    .end(rc.failure().getMessage());
+                    .end(MESSAGE_FROM_ERROR_HANDLER + ": " + rc.failure().getMessage());
         });
 
         var response = performGetRequest("/");
 
         assertThat(response.statusCode()).isEqualTo(500);
-        assertThat(response.body()).isEqualTo(REQUEST_HANDLER_ERROR_MESSAGE);
+        assertThat(response.body()).startsWith(MESSAGE_FROM_ERROR_HANDLER);
+        assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
         vertxTestContext.succeedingThenComplete();
     }
 
@@ -177,7 +179,7 @@ class ApplicationTest {
         router.route("/")
                 .handler(rc -> {
                     handlerExecuted.flag();
-                    throw REQUEST_HANDLER_EXCEPTION;
+                    throw new RuntimeException(REQUEST_HANDLER_ERROR_MESSAGE);
                 });
 
         var response = performGetRequest("/");
@@ -196,7 +198,7 @@ class ApplicationTest {
         router.route("/")
                 .handler(rc -> {
                     handlerExecuted.flag();
-                    throw REQUEST_HANDLER_EXCEPTION;
+                    throw new RuntimeException(REQUEST_HANDLER_ERROR_MESSAGE);
                 })
                 .failureHandler(rc -> {
                     firstFailureHandlerExecuted.flag();
@@ -206,13 +208,14 @@ class ApplicationTest {
                     secondFailureHandlerExecuted.flag();
                     rc.response()
                             .setStatusCode(rc.statusCode())
-                            .end(rc.failure().getMessage());
+                            .end(MESSAGE_FROM_FAILURE_HANDLER + ": " + rc.failure().getMessage());
                 });
 
         var response = performGetRequest("/");
 
         assertThat(response.statusCode()).isEqualTo(500);
-        assertThat(response.body()).isEqualTo(REQUEST_HANDLER_ERROR_MESSAGE);
+        assertThat(response.body()).startsWith(MESSAGE_FROM_FAILURE_HANDLER);
+        assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
         vertxTestContext.succeedingThenComplete();
     }
 
@@ -224,18 +227,13 @@ class ApplicationTest {
         router.route("/")
                 .handler(rc -> {
                     handlerExecuted.flag();
-                    throw REQUEST_HANDLER_EXCEPTION;
+                    throw new RuntimeException(REQUEST_HANDLER_ERROR_MESSAGE);
                 })
                 .failureHandler(rc -> {
                     firstFailureHandlerExecuted.flag();
-                    throw FAILURE_HANDLER_EXCEPTION;
+                    throw new RuntimeException(FAILURE_HANDLER_ERROR_MESSAGE);
                 })
-                .failureHandler(rc -> {
-                    vertxTestContext.failNow("Error should not reach second failure handler");
-                    rc.response()
-                            .setStatusCode(rc.statusCode())
-                            .end(rc.failure().getMessage());
-                });
+                .failureHandler(rc -> vertxTestContext.failNow("Error should not reach second failure handler"));
 
         var response = performGetRequest("/");
 
@@ -253,24 +251,25 @@ class ApplicationTest {
         router.route("/")
                 .handler(rc -> {
                     handlerExecuted.flag();
-                    throw REQUEST_HANDLER_EXCEPTION;
+                    throw new RuntimeException(REQUEST_HANDLER_ERROR_MESSAGE);
                 })
                 .failureHandler(rc -> {
                     failureHandlerExecuted.flag();
-                    throw FAILURE_HANDLER_EXCEPTION;
+                    throw new RuntimeException(FAILURE_HANDLER_ERROR_MESSAGE);
                 });
 
         router.errorHandler(500, rc -> {
             errorHandlerExecuted.flag();
             rc.response()
                     .setStatusCode(500)
-                    .end(rc.failure().getMessage());
+                    .end(MESSAGE_FROM_ERROR_HANDLER + ": " + rc.failure().getMessage());
         });
 
         var response = performGetRequest("/");
 
         assertThat(response.statusCode()).isEqualTo(500);
-        assertThat(response.body()).isEqualTo(REQUEST_HANDLER_ERROR_MESSAGE);
+        assertThat(response.body()).startsWith(MESSAGE_FROM_ERROR_HANDLER);
+        assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
         vertxTestContext.succeedingThenComplete();
     }
 
@@ -280,16 +279,12 @@ class ApplicationTest {
         var rootErrorHandlerExecuted = vertxTestContext.checkpoint();
 
         var subRouter = Router.router(vertx);
-        subRouter.errorHandler(500, rc -> {
-            vertxTestContext.failNow("Error handler for sub router should not be reached");
-            rc.response()
-                    .setStatusCode(500)
-                    .end(REQUEST_HANDLER_ERROR_MESSAGE);
-        });
+        subRouter.errorHandler(500, rc ->
+                vertxTestContext.failNow("Error handler for sub router should not be reached"));
         subRouter.route("/route")
                 .handler(rc -> {
                     handlerExecuted.flag();
-                    throw REQUEST_HANDLER_EXCEPTION;
+                    throw new RuntimeException(REQUEST_HANDLER_ERROR_MESSAGE);
                 });
 
         router.route("/sub/*")
@@ -299,13 +294,14 @@ class ApplicationTest {
             rootErrorHandlerExecuted.flag();
             rc.response()
                     .setStatusCode(500)
-                    .end(REQUEST_HANDLER_ERROR_MESSAGE);
+                    .end(MESSAGE_FROM_ERROR_HANDLER + ": " + rc.failure().getMessage());
         });
 
         var response = performGetRequest("/sub/route");
 
         assertThat(response.statusCode()).isEqualTo(500);
-        assertThat(response.body()).isEqualTo(REQUEST_HANDLER_ERROR_MESSAGE);
+        assertThat(response.body()).startsWith(MESSAGE_FROM_ERROR_HANDLER);
+        assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
         vertxTestContext.succeedingThenComplete();
     }
 
@@ -319,7 +315,7 @@ class ApplicationTest {
         subRouter.route("/route")
                 .handler(rc -> {
                     handlerExecuted.flag();
-                    throw REQUEST_HANDLER_EXCEPTION;
+                    throw new RuntimeException(REQUEST_HANDLER_ERROR_MESSAGE);
                 })
                 .failureHandler(rc -> {
                     subFailureHandlerExecuted.flag();
@@ -334,13 +330,14 @@ class ApplicationTest {
                     rootFailureHandlerExecuted.flag();
                     rc.response()
                             .setStatusCode(500)
-                            .end(FAILURE_HANDLER_ERROR_MESSAGE);
+                            .end(MESSAGE_FROM_FAILURE_HANDLER + ": " + rc.failure().getMessage());
                 });
 
         var response = performGetRequest("/sub/route");
 
         assertThat(response.statusCode()).isEqualTo(500);
-        assertThat(response.body()).isEqualTo(FAILURE_HANDLER_ERROR_MESSAGE);
+        assertThat(response.body()).startsWith(MESSAGE_FROM_FAILURE_HANDLER);
+        assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
         vertxTestContext.succeedingThenComplete();
     }
 
@@ -353,13 +350,13 @@ class ApplicationTest {
         subRouter.route("/route")
                 .handler(rc -> {
                     handlerExecuted.flag();
-                    throw REQUEST_HANDLER_EXCEPTION;
+                    throw new RuntimeException(REQUEST_HANDLER_ERROR_MESSAGE);
                 })
                 .failureHandler(rc -> {
                     subFailureHandlerExecuted.flag();
                     rc.response()
                             .setStatusCode(500)
-                            .end(REQUEST_HANDLER_ERROR_MESSAGE);
+                            .end(FAILURE_HANDLER_ERROR_MESSAGE + ": " + rc.failure().getMessage());
                 });
 
         router.route("/sub/*")
@@ -371,7 +368,8 @@ class ApplicationTest {
         var response = performGetRequest("/sub/route");
 
         assertThat(response.statusCode()).isEqualTo(500);
-        assertThat(response.body()).isEqualTo(REQUEST_HANDLER_ERROR_MESSAGE);
+        assertThat(response.body()).startsWith(FAILURE_HANDLER_ERROR_MESSAGE);
+        assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
         vertxTestContext.succeedingThenComplete();
     }
 
