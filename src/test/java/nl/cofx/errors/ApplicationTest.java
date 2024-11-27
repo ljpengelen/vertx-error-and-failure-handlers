@@ -69,7 +69,6 @@ class ApplicationTest {
         assertThat(response.statusCode()).isEqualTo(500);
         assertThat(response.body()).startsWith(MESSAGE_FROM_FAILURE_HANDLER);
         assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
-        vertxTestContext.succeedingThenComplete();
     }
 
     @Test
@@ -93,7 +92,6 @@ class ApplicationTest {
 
         assertThat(response.statusCode()).isEqualTo(418);
         assertThat(response.body()).isEmpty();
-        vertxTestContext.succeedingThenComplete();
     }
 
     @Test
@@ -118,7 +116,6 @@ class ApplicationTest {
         assertThat(response.statusCode()).isEqualTo(418);
         assertThat(response.body()).startsWith(MESSAGE_FROM_FAILURE_HANDLER);
         assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
-        vertxTestContext.succeedingThenComplete();
     }
 
     @Test
@@ -144,7 +141,6 @@ class ApplicationTest {
         assertThat(response.statusCode()).isEqualTo(500);
         assertThat(response.body()).startsWith(MESSAGE_FROM_FAILURE_HANDLER);
         assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
-        vertxTestContext.succeedingThenComplete();
     }
 
     @Test
@@ -169,7 +165,6 @@ class ApplicationTest {
         assertThat(response.statusCode()).isEqualTo(500);
         assertThat(response.body()).startsWith(MESSAGE_FROM_ERROR_HANDLER);
         assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
-        vertxTestContext.succeedingThenComplete();
     }
 
     @Test
@@ -186,7 +181,6 @@ class ApplicationTest {
 
         assertThat(response.statusCode()).isEqualTo(500);
         assertThat(response.body()).isEqualTo(INTERNAL_SERVER_ERROR);
-        vertxTestContext.succeedingThenComplete();
     }
 
     @Test
@@ -216,7 +210,6 @@ class ApplicationTest {
         assertThat(response.statusCode()).isEqualTo(500);
         assertThat(response.body()).startsWith(MESSAGE_FROM_FAILURE_HANDLER);
         assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
-        vertxTestContext.succeedingThenComplete();
     }
 
     @Test
@@ -239,7 +232,6 @@ class ApplicationTest {
 
         assertThat(response.statusCode()).isEqualTo(500);
         assertThat(response.body()).isEqualTo(INTERNAL_SERVER_ERROR);
-        vertxTestContext.succeedingThenComplete();
     }
 
     @Test
@@ -270,7 +262,6 @@ class ApplicationTest {
         assertThat(response.statusCode()).isEqualTo(500);
         assertThat(response.body()).startsWith(MESSAGE_FROM_ERROR_HANDLER);
         assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
-        vertxTestContext.succeedingThenComplete();
     }
 
     @Test
@@ -302,7 +293,6 @@ class ApplicationTest {
         assertThat(response.statusCode()).isEqualTo(500);
         assertThat(response.body()).startsWith(MESSAGE_FROM_ERROR_HANDLER);
         assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
-        vertxTestContext.succeedingThenComplete();
     }
 
     @Test
@@ -338,7 +328,6 @@ class ApplicationTest {
         assertThat(response.statusCode()).isEqualTo(500);
         assertThat(response.body()).startsWith(MESSAGE_FROM_FAILURE_HANDLER);
         assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
-        vertxTestContext.succeedingThenComplete();
     }
 
     @Test
@@ -370,7 +359,6 @@ class ApplicationTest {
         assertThat(response.statusCode()).isEqualTo(500);
         assertThat(response.body()).startsWith(FAILURE_HANDLER_ERROR_MESSAGE);
         assertThat(response.body()).endsWith(REQUEST_HANDLER_ERROR_MESSAGE);
-        vertxTestContext.succeedingThenComplete();
     }
 
     @SneakyThrows
